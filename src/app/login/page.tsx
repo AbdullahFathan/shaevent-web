@@ -1,27 +1,19 @@
-"use client"; // Wajib karena kita pakai hooks (useState, useForm)
+"use client";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { AuthService } from "@/services/authservices";
 import { useAuthStore } from "@/stores/authStore";
-
-// 1. Setup Zod Schema (Sama persis logikanya dengan di Backend!)
-const loginSchema = z.object({
-  email: z.email({ message: "Format email tidak valid" }),
-  password: z.string().min(1, { message: "Password tidak boleh kosong" }),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
+import { loginSchema, LoginForm } from "@/schema/loginSchema";
+import { isAxiosError } from "axios";
 
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 2. Inisialisasi React Hook Form
   const {
     register,
     handleSubmit,
@@ -30,29 +22,24 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  // 3. Fungsi Submit ke Backend
   const onSubmit = async (data: LoginForm) => {
     try {
       setErrorMessage("");
       const response = await AuthService.login(data);
 
       if (response.success) {
-        // Simpan data user & token ke Zustand (dan localStorage)
         setAuth(response.data.user, response.data.token);
-
-        // Redirect ke Dashboard (nanti kita buat)
         router.push("/dashboard");
       }
-    } catch (error: any) {
-      // Tangkap pesan error dari backend (misal: "Invalid email or password")
-      setErrorMessage(
-        error.response?.data?.message ||
-          "Terjadi kesalahan saat menghubungi server.",
-      );
+    } catch (error) {
+      if (isAxiosError(error)) {
+        setErrorMessage(error.response?.data?.message || "Gagal membuat event");
+      } else {
+        setErrorMessage("Terjadi kesalahan yang tidak terduga");
+      }
     }
   };
 
-  // 4. Render UI dengan Tailwind CSS
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">

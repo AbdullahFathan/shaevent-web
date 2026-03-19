@@ -4,14 +4,7 @@ import { useEffect, useState } from "react";
 import { EventService } from "@/services/eventServices";
 import { CalendarPlus } from "lucide-react";
 import Link from "next/link";
-
-interface FlashEvent {
-  id: number;
-  name: string;
-  location: string;
-  startDate: string;
-  tickets: any[];
-}
+import { FlashEvent } from "@/type";
 
 export default function DashboardPage() {
   const [events, setEvents] = useState<FlashEvent[]>([]);

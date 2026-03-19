@@ -1,4 +1,6 @@
 import { axiosInstance } from "../lib/axios";
+import { CreateEventResponse } from "@/type";
+import { EventForm } from "@/schema/eventSchema";
 
 export const EventService = {
   getAllEvents: async () => {
@@ -6,8 +8,8 @@ export const EventService = {
     return response.data;
   },
 
-  createEvent: async (data: any) => {
-    const response = await axiosInstance.post("/events", data);
+  createEvent: async (data: EventForm): Promise<CreateEventResponse> => {
+    const response = await axiosInstance.post<CreateEventResponse>("/events", data);
     return response.data;
   },
 };

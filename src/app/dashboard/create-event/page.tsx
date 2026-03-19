@@ -3,41 +3,18 @@
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { EventService } from "@/services/eventServices";
 import { Plus, Trash2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
-// 1. Schema Zod (Mirror dari Backend)
-const eventSchema = z.object({
-  name: z.string().min(3, "Nama event minimal 3 karakter"),
-  description: z.string().optional(),
-  location: z.string().min(3, "Lokasi wajib diisi"),
-  startDate: z.string().min(1, "Tanggal mulai wajib diisi"),
-  endDate: z.string().min(1, "Tanggal selesai wajib diisi"),
-  tickets: z
-    .array(
-      z.object({
-        ticketType: z.string().min(1, "Nama tiket wajib diisi"),
-        price: z
-          .number({ message: "Harga harus angka" })
-          .min(0, "Harga tidak boleh minus"),
-        quota: z
-          .number({ message: "Kuota harus angka" })
-          .min(1, "Kuota minimal 1"),
-      }),
-    )
-    .min(1, "Minimal harus ada 1 jenis tiket"),
-});
-
-type EventForm = z.infer<typeof eventSchema>;
+import { eventSchema, EventForm } from "@/schema/eventSchema";
+import { CreateEventResponse } from "@/type";
+import { isAxiosError } from "axios";
 
 export default function CreateEventPage() {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 2. Setup React Hook Form
   const {
     register,
     control,
@@ -46,35 +23,37 @@ export default function CreateEventPage() {
   } = useForm<EventForm>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      tickets: [{ ticketType: "Reguler", price: 0, quota: 100 }], // Default 1 tiket
+      tickets: [{ ticketType: "Reguler", price: 0, quota: 100 }],
     },
   });
 
-  // 3. Setup Field Array (Untuk form tiket yang dinamis)
   const { fields, append, remove } = useFieldArray({
     control,
     name: "tickets",
   });
 
-  // 4. Submit Handler
   const onSubmit = async (data: EventForm) => {
     try {
       setErrorMessage("");
 
-      // Transformasi format tanggal HTML (datetime-local) ke ISO-8601 untuk Backend
       const payload = {
         ...data,
         startDate: new Date(data.startDate).toISOString(),
         endDate: new Date(data.endDate).toISOString(),
       };
 
-      const response = await EventService.createEvent(payload);
+      const response: CreateEventResponse =
+        await EventService.createEvent(payload);
 
       if (response.success) {
-        router.push("/dashboard"); // Kembali ke halaman utama jika sukses
+        router.push("/dashboard");
       }
-    } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || "Gagal membuat event");
+    } catch (error) {
+      if (isAxiosError(error)) {
+        setErrorMessage(error.response?.data?.message || "Gagal membuat event");
+      } else {
+        setErrorMessage("Terjadi kesalahan yang tidak terduga");
+      }
     }
   };
 
@@ -97,7 +76,6 @@ export default function CreateEventPage() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        {/* Card Info Utama */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
           <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">
             Informasi Utama
@@ -172,7 +150,6 @@ export default function CreateEventPage() {
           </div>
         </div>
 
-        {/* Card Tiket (Dynamic Array) */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
           <div className="flex justify-between items-center border-b pb-2">
             <h2 className="text-lg font-semibold text-gray-700">
@@ -235,7 +212,6 @@ export default function CreateEventPage() {
                 />
               </div>
 
-              {/* Tombol Hapus (Hanya muncul jika tiket > 1) */}
               {fields.length > 1 && (
                 <button
                   type="button"
