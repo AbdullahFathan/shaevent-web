@@ -38,7 +38,7 @@ export default function DashboardLayout({
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-2 font-bold text-xl">
               <Ticket size={24} />
-              <span>FlashTicket Admin</span>
+              <span>ShaEvent Admin</span>
             </div>
 
             <div className="flex items-center gap-4">
