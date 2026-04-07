@@ -36,14 +36,20 @@ export default function CreateEventPage() {
     try {
       setErrorMessage("");
 
-      const payload = {
-        ...data,
-        startDate: new Date(data.startDate).toISOString(),
-        endDate: new Date(data.endDate).toISOString(),
-      };
+      const formData = new FormData();
+      formData.append("name", data.name);
+      if (data.description) formData.append("description", data.description);
+      formData.append("location", data.location);
+      formData.append("startDate", new Date(data.startDate).toISOString());
+      formData.append("endDate", new Date(data.endDate).toISOString());
+      formData.append("tickets", JSON.stringify(data.tickets));
+
+      if (data.poster && data.poster.length > 0) {
+        formData.append("poster", data.poster[0]);
+      }
 
       const response: CreateEventResponse =
-        await EventService.createEvent(payload);
+        await EventService.createEvent(formData);
 
       if (response.success) {
         router.push("/dashboard");
@@ -227,6 +233,21 @@ export default function CreateEventPage() {
             <p className="text-red-500 text-sm mt-2">
               {errors.tickets.root.message}
             </p>
+          )}
+        </div>
+
+        <div className="bg-white flex flex-col p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Poster Event
+          </label>
+          <input
+            className="w-full px-4 py-2 border rounded-lg text-black outline-none focus:ring-2 focus:ring-blue-500"
+            type="file"
+            accept="image/*"
+            {...register("poster")}
+          />
+          {errors.poster && (
+            <p className="text-red-500 text-xs mt-1">{errors.poster.message}</p>
           )}
         </div>
 

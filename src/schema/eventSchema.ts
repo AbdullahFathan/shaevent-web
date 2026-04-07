@@ -6,6 +6,7 @@ export const eventSchema = z.object({
   location: z.string().min(3, "Lokasi wajib diisi"),
   startDate: z.string().min(1, "Tanggal mulai wajib diisi"),
   endDate: z.string().min(1, "Tanggal selesai wajib diisi"),
+  poster: z.custom<FileList>((val) => typeof window === "undefined" || val instanceof FileList, "Harap unggah file").optional(),
   tickets: z
     .array(
       z.object({

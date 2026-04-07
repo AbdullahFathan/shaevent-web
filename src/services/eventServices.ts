@@ -8,8 +8,16 @@ export const EventService = {
     return response.data;
   },
 
-  createEvent: async (data: EventForm): Promise<CreateEventResponse> => {
-    const response = await axiosInstance.post<CreateEventResponse>("/events", data);
+  createEvent: async (data: FormData): Promise<CreateEventResponse> => {
+    const response = await axiosInstance.post<CreateEventResponse>(
+      "/events",
+      data,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
     return response.data;
   },
 };
